@@ -17,11 +17,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.scamguard.data.analysis.AnalysisResult
 import com.example.scamguard.data.analysis.RiskLevel
 import com.example.scamguard.ui.components.ScamGuardCard
 import com.example.scamguard.ui.components.ScamGuardPrimaryButton
+import com.example.scamguard.ui.theme.LocalScamGuardDarkTheme
 import com.example.scamguard.ui.theme.ScamHighRisk
 import com.example.scamguard.ui.theme.ScamLowRisk
 import com.example.scamguard.ui.theme.ScamUncertain
@@ -69,10 +71,14 @@ fun ResultScreen(
     backLabel: String = "Back to message",
     modifier: Modifier = Modifier
 ) {
+    // Use the app's selected theme so verdict labels match the card colours.
+    val darkTheme = LocalScamGuardDarkTheme.current
+
+    // Keep the light colours and use brighter shades on dark cards.
     val verdictColor = when (result.riskLevel) {
-        RiskLevel.HIGH -> ScamHighRisk
-        RiskLevel.UNCERTAIN -> ScamUncertain
-        RiskLevel.LOW -> ScamLowRisk
+        RiskLevel.HIGH -> if (darkTheme) Color(0xFFFFB4AB) else ScamHighRisk
+        RiskLevel.UNCERTAIN -> if (darkTheme) Color(0xFFFFD28A) else ScamUncertain
+        RiskLevel.LOW -> if (darkTheme) Color(0xFF8DE3AF) else ScamLowRisk
     }
 
     // Use the API's risk category to choose a label people can read at a glance.

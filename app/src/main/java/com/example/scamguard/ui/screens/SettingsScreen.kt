@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.scamguard.ui.components.ScamGuardCard
+import com.example.scamguard.ui.theme.ThemePickerButton
 
 @Composable
 fun SettingsScreen(
@@ -53,6 +54,7 @@ fun SettingsScreen(
             text = "Settings",
             style = MaterialTheme.typography.headlineMedium
         )
+        ThemePickerButton()
 
         ScamGuardCard {
             Text(

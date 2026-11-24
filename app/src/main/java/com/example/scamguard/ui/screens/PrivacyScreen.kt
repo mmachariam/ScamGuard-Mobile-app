@@ -74,8 +74,8 @@ fun PrivacyDetails(
 
         PrivacySection(
             title = "What is stored",
-            body = "ScamGuard stores your Welcome preference and completed " +
-                    "checks in app storage on this device.\n\n" +
+            body = "ScamGuard stores your Welcome and appearance preferences " +
+                    "and completed checks in app storage on this device.\n\n" +
                     "Saved checks contain the original message, verdict, " +
                     "explanation, recommended actions, timestamp and demo label."
         )

@@ -23,7 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.scamguard.ui.navigation.MainScreen
@@ -34,6 +33,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import com.example.scamguard.ui.screens.PrivacyDetails
+import androidx.compose.runtime.SideEffect
+import androidx.core.view.WindowCompat
+import com.example.scamguard.ui.theme.LocalScamGuardDarkTheme
 
 
 
@@ -44,14 +46,19 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
-        // Use dark system icons against the app's light background.
-        WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = true
-            isAppearanceLightNavigationBars = true
-        }
-
         setContent {
             ScamGuardTheme {
+                val darkTheme = LocalScamGuardDarkTheme.current
+
+                SideEffect {
+                    // Match the system bar icons to the app's selected theme.
+                    // Android's "light bars" setting uses dark icons.
+                    WindowCompat.getInsetsController(window, window.decorView).apply {
+                        isAppearanceLightStatusBars = !darkTheme
+                        isAppearanceLightNavigationBars = !darkTheme
+                    }
+                }
+
                 ScamGuardApp()
             }
         }
