@@ -23,3 +23,13 @@ Invoke-RestMethod http://127.0.0.1:8000/health
 
 The Android Studio emulator reaches this server at `http://10.0.2.2:8000`.
 Keep the API running while you use the Android app's debug build.
+
+## Feedback storage
+
+Startup creates `scamguard_feedback.db` in `backend/`. Feedback sends only the
+submission kind, ID, risk level, and vote or report reason. The API stores
+these fields with a server-generated timestamp.
+
+Set `SCAMGUARD_FEEDBACK_DB_PATH` before starting the API to use a different
+SQLite file. Point it at a fresh file in an existing temporary directory
+when testing feedback.

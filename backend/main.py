@@ -6,6 +6,7 @@ from typing import Literal
 from fastapi import FastAPI, Request
 from pydantic import BaseModel, Field, StrictStr, field_validator
 
+from feedback import init_feedback_db, router as feedback_router
 from portable_predictor import ScamGuardModels
 
 
@@ -51,10 +52,12 @@ async def lifespan(app: FastAPI):
         )
 
     app.state.models = ScamGuardModels(MODEL_FILE)
+    init_feedback_db()
     yield
 
 
 app = FastAPI(title="ScamGuard API", lifespan=lifespan)
+app.include_router(feedback_router)
 
 
 def explain_phrase(phrase: str, risk: RiskLevel) -> str:
