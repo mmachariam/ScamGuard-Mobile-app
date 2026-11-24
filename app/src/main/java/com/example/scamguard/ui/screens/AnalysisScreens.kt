@@ -15,18 +15,29 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.scamguard.data.analysis.AnalysisResult
+import com.example.scamguard.data.analysis.FeedbackApi
 import com.example.scamguard.data.analysis.RiskLevel
 import com.example.scamguard.ui.components.ScamGuardCard
 import com.example.scamguard.ui.components.ScamGuardPrimaryButton
+import com.example.scamguard.ui.components.rememberLocalApiPermission
 import com.example.scamguard.ui.theme.LocalScamGuardDarkTheme
 import com.example.scamguard.ui.theme.ScamHighRisk
 import com.example.scamguard.ui.theme.ScamLowRisk
 import com.example.scamguard.ui.theme.ScamUncertain
+import java.util.UUID
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 
 @Composable
 fun AnalyzingScreen(
@@ -218,43 +229,16 @@ fun ResultScreen(
             }
         }
 
-        ScamGuardCard {
-            Text(
-                text = "Was this result helpful?",
-                style = MaterialTheme.typography.titleMedium
+        key(result) {
+            HelpfulFeedbackCard(
+                result = result,
+                helpfulFeedback = helpfulFeedback,
+                onHelpful = onHelpful
             )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                FilterChip(
-                    selected = helpfulFeedback == true,
-                    onClick = { onHelpful(true) },
-                    label = { Text(text = "Yes") }
-                )
-
-                FilterChip(
-                    selected = helpfulFeedback == false,
-                    onClick = { onHelpful(false) },
-                    label = { Text(text = "No") }
-                )
-            }
-
-            if (helpfulFeedback != null) {
-                // Acknowledge the choice without claiming a submission.
-                Text(
-                    text = "Demo acknowledgement: you selected " +
-                            (if (helpfulFeedback) "Yes." else "No.") +
-                            " Your choice is temporary and has not been " +
-                            "saved or submitted.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            }
         }
 
         TextButton(onClick = onReportIncorrect) {
-            Text(text = "Report incorrect prediction")
+            Text(text = "Report a problem with this result")
         }
 
         Text(
@@ -267,5 +251,92 @@ fun ResultScreen(
             text = "Check another message",
             onClick = onCheckAnother
         )
+    }
+}
+
+@Composable
+private fun HelpfulFeedbackCard(
+    result: AnalysisResult,
+    helpfulFeedback: Boolean?,
+    onHelpful: (Boolean) -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    var isSending by remember { mutableStateOf(false) }
+    var pendingVote by remember { mutableStateOf<Boolean?>(null) }
+    var submissionId by remember { mutableStateOf<String?>(null) }
+    var saveError by remember { mutableStateOf<String?>(null) }
+    val withLocalApiPermission = rememberLocalApiPermission {
+        isSending = false
+        saveError = "Allow local network access to save feedback."
+    }
+
+    fun sendVote(vote: Boolean) {
+        if (isSending || helpfulFeedback != null) return
+
+        // Keep the same ID on retry in case the first request saved the vote
+        // but its reply never reached the app.
+        val id = submissionId ?: UUID.randomUUID().toString()
+        submissionId = id
+        pendingVote = vote
+        isSending = true
+        saveError = null
+
+        withLocalApiPermission {
+            scope.launch {
+                try {
+                    FeedbackApi.submitHelpful(id, result.riskLevel, vote)
+                    onHelpful(vote)
+                    pendingVote = null
+                    submissionId = null
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    saveError = "Couldn’t confirm the save. Please try again."
+                } finally {
+                    isSending = false
+                }
+            }
+        }
+    }
+
+    ScamGuardCard {
+        Text(
+            text = "Was this result helpful?",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            listOf(true to "Yes", false to "No").forEach { (vote, label) ->
+                FilterChip(
+                    selected = helpfulFeedback == vote,
+                    enabled = result.isDemo ||
+                            (!isSending && pendingVote == null && helpfulFeedback == null),
+                    onClick = {
+                        // Demo results acknowledge the choice locally.
+                        if (result.isDemo) onHelpful(vote) else sendVote(vote)
+                    },
+                    label = { Text(text = label) }
+                )
+            }
+        }
+
+        when {
+            isSending -> Text(text = "Saving feedback…")
+
+            saveError != null -> {
+                Text(text = saveError.orEmpty())
+                TextButton(onClick = { pendingVote?.let { sendVote(it) } }) {
+                    Text(text = "Retry")
+                }
+            }
+
+            helpfulFeedback != null -> Text(
+                text = if (result.isDemo) {
+                    "Demo feedback stays on this screen."
+                } else {
+                    "Feedback saved. Thank you."
+                }
+            )
+        }
     }
 }

@@ -49,9 +49,11 @@ fun CheckMessageScreen(
 
     // Both toolbar actions and system Back use the same cleanup behaviour.
     val closeReport: () -> Unit = {
-        keyboardController?.hide()
-        reportViewModel.reset()
-        checkViewModel.closeReport()
+        if (reportViewModel.uiState.value.status != ReportStatus.SENDING) {
+            keyboardController?.hide()
+            reportViewModel.reset()
+            checkViewModel.closeReport()
+        }
     }
 
     // Back follows the current flow:
@@ -95,12 +97,9 @@ fun CheckMessageScreen(
                 ReportFeedbackScreen(
                     result = result,
                     uiState = reportUiState,
-                    onChoiceSelected = reportViewModel::selectChoice,
-                    onDetailsChanged = reportViewModel::updateDetails,
-                    onSubmit = {
-                        keyboardController?.hide()
-                        reportViewModel.submit(result)
-                    },
+                    onReasonSelected = reportViewModel::selectReason,
+                    onPermissionDenied = reportViewModel::onPermissionDenied,
+                    onSubmit = { reportViewModel.submit(result) },
                     onClose = closeReport,
                     modifier = modifier
                 )

@@ -175,7 +175,8 @@ fun SettingsScreen(
             Text(
                 text = "University project · Development build\n\n" +
                         "Text analysis uses a trained TF-IDF logistic regression model " +
-                        "through the analysis API.",
+                        "through the analysis API. You can send helpfulness votes " +
+                        "and reports from live results, including those opened from History.",
                 modifier = Modifier.padding(top = 12.dp),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

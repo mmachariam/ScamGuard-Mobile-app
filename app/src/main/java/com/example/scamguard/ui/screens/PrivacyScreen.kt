@@ -90,9 +90,10 @@ fun PrivacyDetails(
 
         PrivacySection(
             title = "Feedback and reports",
-            body = "Helpful-result choices and incorrect-prediction reports " +
-                    "are temporary demo interactions. They are not submitted " +
-                    "to a server or saved in the history database."
+            body = "Live feedback sends a submission ID and the risk level to the backend, " +
+                    "along with your Yes or No vote or the reason you selected for a report. " +
+                    "The original message stays on your device when you send feedback. " +
+                    "Demo feedback stays on the current screen."
         )
 
         PrivacySection(
