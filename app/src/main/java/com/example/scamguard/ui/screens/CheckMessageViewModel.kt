@@ -3,7 +3,6 @@ package com.example.scamguard.ui.screens
 import androidx.lifecycle.viewModelScope
 import com.example.scamguard.data.analysis.AnalysisResult
 import com.example.scamguard.data.analysis.AnalysisService
-import com.example.scamguard.data.analysis.DemoAnalysisService
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +12,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.example.scamguard.data.local.CheckRepository
 import com.example.scamguard.data.local.ScamGuardDatabase
+import com.example.scamguard.data.analysis.ApiAnalysisService
+import com.example.scamguard.data.analysis.AnalysisRequestException
 
 const val MAX_MESSAGE_LENGTH = 2_000
 
@@ -39,8 +40,8 @@ class CheckMessageViewModel(
         application: Application
     ) : AndroidViewModel(application) {
 
-    // Replace this service with an API implementation in a later stage.
-    private val analysisService: AnalysisService = DemoAnalysisService()
+    // Use the trained-model API for new checks.
+    private val analysisService: AnalysisService = ApiAnalysisService()
 
     private val mutableUiState = MutableStateFlow(CheckMessageUiState())
     val uiState = mutableUiState.asStateFlow()
@@ -128,10 +129,16 @@ class CheckMessageViewModel(
                 saveCompletedResult(result)
             } catch (cancelled: CancellationException) {
                 throw cancelled
+            } catch (error: AnalysisRequestException) {
+                mutableUiState.value = mutableUiState.value.copy(
+                    isAnalyzing = false,
+                    analysisError = error.message
+                        ?: "Could not complete analysis. Please retry."
+                )
             } catch (_: Exception) {
                 mutableUiState.value = mutableUiState.value.copy(
                     isAnalyzing = false,
-                    analysisError = "The demo could not finish. Please retry."
+                    analysisError = "Could not complete analysis. Please retry."
                 )
             }
         }

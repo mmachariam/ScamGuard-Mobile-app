@@ -6,7 +6,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,12 +33,11 @@ fun SavedCheckScreen(
         mutableStateOf<Boolean?>(null)
     }
 
-    val keyboard = LocalSoftwareKeyboardController.current
-
     val closeReport: () -> Unit = {
-        keyboard?.hide()
-        reportViewModel.reset()
-        showReport = false
+        if (reportViewModel.uiState.value.status != ReportStatus.SENDING) {
+            reportViewModel.reset()
+            showReport = false
+        }
     }
 
     BackHandler(enabled = showExplanation || showReport) {
@@ -99,12 +97,9 @@ fun SavedCheckScreen(
                     ReportFeedbackScreen(
                         result = result,
                         uiState = reportState,
-                        onChoiceSelected = reportViewModel::selectChoice,
-                        onDetailsChanged = reportViewModel::updateDetails,
-                        onSubmit = {
-                            keyboard?.hide()
-                            reportViewModel.submit(result)
-                        },
+                        onReasonSelected = reportViewModel::selectReason,
+                        onPermissionDenied = reportViewModel::onPermissionDenied,
+                        onSubmit = { reportViewModel.submit(result) },
                         onClose = closeReport
                     )
                 }

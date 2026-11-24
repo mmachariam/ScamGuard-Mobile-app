@@ -64,6 +64,8 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     // Generates the database and DAO implementations during compilation.
     ksp(libs.androidx.room.compiler)
+    // Sends analysis requests to the Python API.
+    implementation(libs.okhttp)
 }
 
 // Export database schemas so future migrations can preserve existing history.

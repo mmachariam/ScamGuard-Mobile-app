@@ -63,16 +63,19 @@ fun PrivacyDetails(
         )
 
         PrivacySection(
-            title = "How this demo analyzes text",
-            body = "Messages are checked using local keyword rules. " +
-                    "No trained AI model or analysis server is connected. " +
-                    "Results and explanations are labelled as demo output."
+            title = "How messages are analyzed",
+            body = "When you tap Analyze message, your text is sent to " +
+                    "ScamGuard's analysis server. The server uses the trained " +
+                    "TF-IDF logistic regression model.\n\n" +
+                    "The current API processes messages in memory and has no " +
+                    "message-history database. Completed results are saved " +
+                    "locally by the Android app."
         )
 
         PrivacySection(
             title = "What is stored",
-            body = "ScamGuard stores your Welcome preference and completed " +
-                    "checks in app storage on this device.\n\n" +
+            body = "ScamGuard stores your Welcome and appearance preferences " +
+                    "and completed checks in app storage on this device.\n\n" +
                     "Saved checks contain the original message, verdict, " +
                     "explanation, recommended actions, timestamp and demo label."
         )
@@ -87,9 +90,10 @@ fun PrivacyDetails(
 
         PrivacySection(
             title = "Feedback and reports",
-            body = "Helpful-result choices and incorrect-prediction reports " +
-                    "are temporary demo interactions. They are not submitted " +
-                    "to a server or saved in the history database."
+            body = "Live feedback sends a submission ID and the risk level to the backend, " +
+                    "along with your Yes or No vote or the reason you selected for a report. " +
+                    "The original message stays on your device when you send feedback. " +
+                    "Demo feedback stays on the current screen."
         )
 
         PrivacySection(

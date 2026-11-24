@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.scamguard.ui.components.ScamGuardCard
+import com.example.scamguard.ui.theme.ThemePickerButton
 
 @Composable
 fun SettingsScreen(
@@ -53,6 +54,7 @@ fun SettingsScreen(
             text = "Settings",
             style = MaterialTheme.typography.headlineMedium
         )
+        ThemePickerButton()
 
         ScamGuardCard {
             Text(
@@ -148,7 +150,7 @@ fun SettingsScreen(
 
             Text(
                 text = "Understand what ScamGuard stores and " +
-                        "how the current demo handles your messages.",
+                        "how it handles your messages.",
                 modifier = Modifier.padding(top = 12.dp),
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -171,10 +173,10 @@ fun SettingsScreen(
             )
 
             Text(
-                text = "University project · Development demo\n\n" +
-                        "Analysis currently uses local keyword rules. " +
-                        "A trained AI model and live feedback service " +
-                        "are not connected.",
+                text = "University project · Development build\n\n" +
+                        "Text analysis uses a trained TF-IDF logistic regression model " +
+                        "through the analysis API. You can send helpfulness votes " +
+                        "and reports from live results, including those opened from History.",
                 modifier = Modifier.padding(top = 12.dp),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

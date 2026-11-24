@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -22,20 +22,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.example.scamguard.data.analysis.AnalysisResult
-import com.example.scamguard.data.feedback.ReportChoice
+import com.example.scamguard.data.feedback.ReportReason
 import com.example.scamguard.ui.components.ScamGuardCard
 import com.example.scamguard.ui.components.ScamGuardPrimaryButton
+import com.example.scamguard.ui.components.rememberLocalApiPermission
 
 @Composable
 fun ReportFeedbackScreen(
     result: AnalysisResult,
     uiState: ReportFeedbackUiState,
-    onChoiceSelected: (ReportChoice) -> Unit,
-    onDetailsChanged: (String) -> Unit,
+    onReasonSelected: (ReportReason) -> Unit,
+    onPermissionDenied: () -> Unit,
     onSubmit: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val withLocalApiPermission = rememberLocalApiPermission(onPermissionDenied)
+    val isSending = uiState.status == ReportStatus.SENDING
+    val isEditing = uiState.status == ReportStatus.EDITING
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -44,179 +49,110 @@ fun ReportFeedbackScreen(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Text(
-            text = "Report incorrect prediction",
+            text = "Report a problem",
             style = MaterialTheme.typography.headlineMedium
         )
 
-        when (uiState.status) {
-            ReportStatus.SENDING -> {
-                CircularProgressIndicator()
-
+        if (uiState.status == ReportStatus.SAVED || uiState.status == ReportStatus.DEMO_COMPLETE) {
+            ScamGuardCard {
                 Text(
-                    text = "Preparing demo acknowledgement…",
-                    style = MaterialTheme.typography.titleMedium
+                    text = if (result.isDemo) "Demo complete" else "Report saved",
+                    style = MaterialTheme.typography.titleLarge
                 )
 
-                Text(
-                    text = "Simulated progress only. No message or feedback " +
-                            "is being sent to a server."
-                )
-
-                TextButton(onClick = onClose) {
-                    Text(text = "Cancel demo")
-                }
-            }
-
-            ReportStatus.DEMO_COMPLETE -> {
-                ScamGuardCard {
+                if (result.isDemo) {
                     Text(
-                        text = "Demo complete — nothing submitted",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-
-                    Text(
-                        text = "You selected: " +
-                                uiState.choice?.label.orEmpty(),
-                        modifier = Modifier.padding(top = 12.dp)
-                    )
-
-                    Text(
-                        text = "Your message and feedback were not sent " +
-                                "or saved. The original prediction is unchanged.",
+                        text = "Demo feedback stays on this screen.",
                         modifier = Modifier.padding(top = 12.dp)
                     )
                 }
-
-                ScamGuardPrimaryButton(
-                    text = "Back to result",
-                    onClick = onClose
-                )
             }
 
-            else -> {
+            ScamGuardPrimaryButton(text = "Back to result", onClick = onClose)
+        } else {
+            if (result.isDemo) {
                 Text(
-                    text = "DEMO MODE · feedback submission is not connected.",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "Demo report · feedback stays on this screen.",
                     color = MaterialTheme.colorScheme.primary
                 )
+            }
 
-                ScamGuardCard {
-                    Text(
-                        text = if (result.isDemo) {
-                            "Original demo prediction"
-                        } else {
-                            "Original prediction"
-                        },
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    Text(
-                        text = result.riskLevel.label,
-                        modifier = Modifier.padding(top = 8.dp),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-
-                    Text(
-                        text = result.originalMessage,
-                        modifier = Modifier.padding(top = 12.dp),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-
+            ScamGuardCard {
                 Text(
-                    text = "What do you think this message is?",
-                    style = MaterialTheme.typography.titleMedium
+                    text = result.riskLevel.label,
+                    style = MaterialTheme.typography.titleLarge
                 )
+                Text(
+                    text = result.originalMessage,
+                    modifier = Modifier.padding(top = 12.dp),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
 
-                // Make each entire row a single accessible radio option.
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectableGroup()
-                ) {
-                    ReportChoice.entries.forEach { choice ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .selectable(
-                                    selected = uiState.choice == choice,
-                                    role = Role.RadioButton,
-                                    onClick = {
-                                        onChoiceSelected(choice)
-                                    }
-                                )
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            RadioButton(
-                                selected = uiState.choice == choice,
-                                // The parent row handles clicks and semantics.
-                                onClick = null
+            Text(
+                text = "What was the problem?",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Column(modifier = Modifier.fillMaxWidth().selectableGroup()) {
+                ReportReason.entries.forEach { reason ->
+                    val selected = uiState.reason == reason
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .selectable(
+                                selected = selected,
+                                enabled = isEditing,
+                                role = Role.RadioButton,
+                                onClick = { onReasonSelected(reason) }
                             )
-
-                            Text(text = choice.label)
-                        }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        RadioButton(selected = selected, onClick = null, enabled = isEditing)
+                        Text(text = reason.label)
                     }
                 }
+            }
 
-                OutlinedTextField(
-                    value = uiState.details,
-                    onValueChange = onDetailsChanged,
-                    modifier = Modifier.fillMaxWidth(),
-                    label = {
-                        Text(text = "Additional details (optional)")
-                    },
-                    placeholder = {
-                        Text(text = "Explain what seems incorrect…")
-                    },
-                    minLines = 4,
-                    maxLines = 8,
-                    isError = uiState.detailsError != null,
-                    supportingText = {
-                        Column {
-                            uiState.detailsError?.let { error ->
-                                Text(text = error)
-                            }
-
-                            Text(
-                                text = "${uiState.details.length} / " +
-                                        MAX_REPORT_DETAILS
-                            )
-                        }
-                    }
-                )
-
+            if (!result.isDemo) {
                 Text(
-                    text = "When a feedback backend is connected, submitting " +
-                            "will share the original message, prediction, your " +
-                            "choice and these details for review.\n\n" +
-                            "This demo does not share or save that information. " +
-                            "Remove private information from your details.",
+                    text = "The report sends the selected reason and risk level. " +
+                        "The original message stays on your device.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
+            }
 
-                uiState.submissionError?.let { error ->
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error
-                    )
+            uiState.submissionError?.let { error ->
+                Text(text = error, color = MaterialTheme.colorScheme.error)
+            }
+
+            if (isSending) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    Text(text = "Sending report…")
                 }
+            }
 
-                ScamGuardPrimaryButton(
-                    text = if (uiState.status == ReportStatus.FAILED) {
-                        "Retry demo"
-                    } else {
-                        "Preview demo submission"
-                    },
-                    enabled = uiState.canSubmit,
-                    onClick = onSubmit
-                )
-
-                TextButton(onClick = onClose) {
-                    Text(text = "Cancel")
+            ScamGuardPrimaryButton(
+                text = when {
+                    result.isDemo -> "Preview demo submission"
+                    uiState.status == ReportStatus.FAILED -> "Retry"
+                    else -> "Send report"
+                },
+                enabled = uiState.canSubmit,
+                onClick = {
+                    if (result.isDemo) onSubmit() else withLocalApiPermission(onSubmit)
                 }
+            )
+
+            TextButton(onClick = onClose, enabled = !isSending) {
+                Text(text = "Cancel")
             }
         }
     }
