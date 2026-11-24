@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.scamguard.ui.components.ScamGuardCard
 import com.example.scamguard.ui.components.ScamGuardPrimaryButton
+import com.example.scamguard.ui.components.rememberLocalApiPermission
 import androidx.activity.compose.BackHandler
 
 @Composable
@@ -38,6 +39,9 @@ fun CheckMessageScreen(
 
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val withLocalApiPermission = rememberLocalApiPermission {
+        checkViewModel.showInputError("Allow local network access to connect to the analysis service.")
+    }
     // This ViewModel belongs to the same Check navigation destination.
     val reportViewModel: ReportFeedbackViewModel = viewModel()
 
@@ -261,21 +265,21 @@ fun CheckMessageScreen(
         uiState.analysisError?.let { error ->
             Text(
                 text = error,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
             )
         }
 
         ScamGuardPrimaryButton(
             text = if (uiState.analysisError != null) {
-                "Retry demo analysis"
+                "Retry analysis"
             } else {
                 "Analyze message"
             },
             enabled = uiState.canAnalyze,
             onClick = {
                 keyboardController?.hide()
-                checkViewModel.analyze()
+                withLocalApiPermission(checkViewModel::analyze)
             }
         )
 

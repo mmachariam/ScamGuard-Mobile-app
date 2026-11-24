@@ -102,6 +102,15 @@ fun ExplanationScreen(
                 color = MaterialTheme.colorScheme.primary
             )
         }
+        if (!result.isDemo) {
+            Text(
+                text = "Highlighted terms contributed toward the model's " +
+                        "predicted class. They show learned associations and " +
+                        "may be misleading in a different context.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
 
         ScamGuardCard {
             Text(
@@ -134,9 +143,8 @@ fun ExplanationScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "There are no matching phrases to highlight. " +
-                            "These limited rules can miss scams, and a message " +
-                            "can be harmful without using any of these keywords.",
+                    text = "There are no matching phrases to highlight for this result. " +
+                            "Review the result summary and verify unexpected requests independently.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

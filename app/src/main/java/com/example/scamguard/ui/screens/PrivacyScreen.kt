@@ -63,10 +63,13 @@ fun PrivacyDetails(
         )
 
         PrivacySection(
-            title = "How this demo analyzes text",
-            body = "Messages are checked using local keyword rules. " +
-                    "No trained AI model or analysis server is connected. " +
-                    "Results and explanations are labelled as demo output."
+            title = "How messages are analyzed",
+            body = "When you tap Analyze message, your text is sent to " +
+                    "ScamGuard's analysis server. The server uses the trained " +
+                    "TF-IDF logistic regression model.\n\n" +
+                    "The current API processes messages in memory and has no " +
+                    "message-history database. Completed results are saved " +
+                    "locally by the Android app."
         )
 
         PrivacySection(
