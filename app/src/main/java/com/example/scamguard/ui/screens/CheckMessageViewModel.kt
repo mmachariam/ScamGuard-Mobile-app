@@ -128,6 +128,7 @@ class CheckMessageViewModel(
                 // Save a completed result once. Opening it later does not save again.
                 saveCompletedResult(result)
             } catch (cancelled: CancellationException) {
+                // Cancellation must propagate so cancelled results are not displayed.
                 throw cancelled
             } catch (error: AnalysisRequestException) {
                 mutableUiState.value = mutableUiState.value.copy(
